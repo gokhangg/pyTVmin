@@ -49,7 +49,8 @@ import matplotlib.pyplot as plt
 
 file="/hdd/Mega/Dropbox_old_2/Dataset/Pre.mhd"
 
-Sn=readVolume(file).swapaxes(0,2)
+Sn=readVolume(file)
+print(Sn.shape)
 #Sn=Sn[5]
 #Im=scipy.ndimage.imread(File, flatten=False, mode=None)
 #Im=np.array(Im[:,:,0],dtype="float")
@@ -60,14 +61,45 @@ sizeArray+=2
 imArr=np.zeros(sizeArray)
 imArr[1:-1,1:-1,1:-1]=Sn
 Sn=imArr
+print(Sn.shape)
 
+def der(In):
+    D=0*In
+    D[:-1]=In[1:]-In[:-1]
+    return D
 
+def div1(In):
+    div=0*In
+    div[1:]=In[1:]-In[:-1]
+    return div
 
+def gradient(inImage):
+    imageDimension=len(inImage.shape)
+    print(inImage.shape)
+    print(imageDimension)
+    result=[]
+    for ind in range(imageDimension-1,-1,-1):
+        print(ind)
+        result+=[der(inImage.swapaxes(imageDimension-1,ind)).swapaxes(imageDimension-1,ind)]
+    return result
+
+def divergence(inImage):
+    imageDimension=len(inImage.shape)-1
+    print((imageDimension))
+    
+    summation=0
+    for ind in range(imageDimension-1,-1,-1):
+        summation+=div1(inImage[imageDimension-1-ind].swapaxes(imageDimension-1,ind)).swapaxes(imageDimension-1,ind)
+        
+    return summation
+
+    
 
 def derX(In):
     D=0*In
     D[:-1,:,:]=In[1:,:,:]-In[:-1,:,:]
     return D
+
 def derY(In):
     D=0*In
     D[:,:-1,:]=In[:,1:,:]-In[:,:-1,:]
@@ -105,12 +137,12 @@ P=0*Pold
 To=0.1
 Lm=50.0001
 for ii in range(0,20):
-    Psi=np.array(grad(div(P)-Sn/Lm))
+    Psi=np.array(gradient(divergence(P)-Sn/Lm))
     r=np.sqrt(Psi[0]**2+Psi[1]**2+Psi[2]**2)
     P=(P+To*Psi)/(1+To*r)
     
-Sest=(Sn-div(P)*Lm)
-plt.imshow(Sest.swapaxes(0,2)[5],cmap="Greys_r")
+Sest=(Sn-divergence(P)*Lm)
+plt.imshow(Sest[5],cmap="Greys_r")
 #plt.imshow(np.abs(Sn-Sest),cmap="Greys_r")
 plt.show()
     
