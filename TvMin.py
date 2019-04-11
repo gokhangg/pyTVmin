@@ -49,67 +49,70 @@ import matplotlib.pyplot as plt
 
 file="/hdd/Mega/Dropbox_old_2/Dataset/Pre.mhd"
 
-Sn=readVolume(file)
-Sn=Sn[5]
+Sn=readVolume(file).swapaxes(0,2)
+#Sn=Sn[5]
 #Im=scipy.ndimage.imread(File, flatten=False, mode=None)
 #Im=np.array(Im[:,:,0],dtype="float")
 
+sizeArray=np.array(Sn.shape)
+#addition of padding to image edges
+sizeArray+=2
+imArr=np.zeros(sizeArray)
+imArr[1:-1,1:-1,1:-1]=Sn
+Sn=imArr
 
 
 
 
 def derX(In):
-    Dx=0*In
-    Dx[:-1]=In[1:]-In[:-1]
-    return Dx
+    D=0*In
+    D[:-1,:,:]=In[1:,:,:]-In[:-1,:,:]
+    return D
+def derY(In):
+    D=0*In
+    D[:,:-1,:]=In[:,1:,:]-In[:,:-1,:]
+    return D
+
+def derZ(In):
+    D=0*In
+    D[:,:,:-1]=In[:,:,1:]-In[:,:,:-1]
+    return D
 
 def grad(In):
-    return derX(In.T).T,derX(In)
+    return derX(In),derY(In),derZ(In)
 
-def divX(In):
+def divZ(In):
     DivX=1*In
-    DivX[1:]=In[1:]-In[:-1]#DivX[1:-1]=In[1:-1]-In[:-2]
-    #DivX[-1]=-In[-2]
+    DivX[:,:,1:]=In[:,:,1:]-In[:,:,:-1]
     return DivX
 
+def divY(In):
+    Div=0*In
+    Div[:,1:,:]=In[:,1:,:]-In[:,:-1,:]
+    return Div
+
+def divX(In):
+    Div=0*In
+    Div[1:,:,:]=In[1:,:,:]-In[:-1,:,:]
+    return Div
+
 def div(In):
-    return divX(In[0].T).T+divX(In[1])
+    return divX(In[0])+divY(In[1])+divZ(In[2])
 
 
-Pold=np.array([np.copy(Sn),np.copy(Sn)])
+Pold=np.array([np.copy(Sn),np.copy(Sn),np.copy(Sn)])
 P=0*Pold
 To=0.1
-Lm=25.0001
-for ii in range(0,100):
-#while np.max(np.sqrt((P[0]-Pold[0])**2+(P[1]-Pold[1])**2))>0.00000005:
+Lm=50.0001
+for ii in range(0,20):
     Psi=np.array(grad(div(P)-Sn/Lm))
-    r=np.sqrt(Psi[0]**2+Psi[1]**2)
+    r=np.sqrt(Psi[0]**2+Psi[1]**2+Psi[2]**2)
     P=(P+To*Psi)/(1+To*r)
     
 Sest=(Sn-div(P)*Lm)
-plt.imshow(Sest,cmap="Greys_r")
+plt.imshow(Sest.swapaxes(0,2)[5],cmap="Greys_r")
 #plt.imshow(np.abs(Sn-Sest),cmap="Greys_r")
 plt.show()
-
-
-
-
-
-"""
-St=10000
-P=0*Sn
-Pold=np.copy(Sn)
-To=0.25
-Lm=100
-while np.max(np.abs(P-Pold))>0.000005:
-    Psi=(derX(divX(P)-Sn/Lm))
-    r=np.sqrt(np.sum(Psi**2))
-    Pold=1*P
-    P=(Pold+To*Psi)/(1+To*r)
-    
-Sest=(Sn-divX(P)*Lm)
-plt.plot(Sest[:256])
-"""
     
 
 
