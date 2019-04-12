@@ -38,114 +38,100 @@ def readVolume(File):
     return sitk.GetArrayFromImage(itkimage)
 
 
-#import skimage
-#skimage
-
-
-
-#import scipy.ndimage
 import matplotlib.pyplot as plt
 
+class TVmin(object):
+    
+    def __init__(self):
+        self.__to=0.15
+        self.__lamb=5
+        self.__iterationNumber=30
+        self.__verbose=False
+        self.__resultImage=np.array([])
+    
+    def getResultImage(self):
+        return self.__resultImage
+
+    def getInputImage(self):
+        return self.__inputImage
+    
+    def setInputImage(self,inImage):                       
+        self.__inputImage=inImage
+    
+    def setLambda(self,lamb):
+        self.__lamb=lamb
+    
+    def setTo(self,to):
+        self.__to=to
+    
+    def setVerbose(self,verb):
+        self.__verbose=verb
+        
+    def minimize(self):
+        try:
+            p=np.array(self.__gradient(0*self.__inputImage))
+        except:
+            if self.__verbose:
+                print("Problem with input image")
+            return
+        try:
+            for ind in range(0,self.__iterationNumber):
+                if self.__verbose:
+                    print("Itertion: ",ind)
+                midP=self.__divergence(p)-self.__inputImage/self.__lamb
+                psi=np.array(self.__gradient(midP))
+                r=self.__getSquareSum(psi)
+                p=(p+self.__to*psi)/(1+self.__to*r)
+            self.__resultImage=(self.__inputImage-self.__divergence(p)*self.__lamb)
+        except:
+            if self.__verbose:
+                print("Problem with minimization")
+    
+    def __gradient(self,inImage):
+        imageDimension=len(inImage.shape)
+        result=[]
+        for ind in range(imageDimension-1,-1,-1):
+            result+=[self.__forwardDerivative(inImage.swapaxes(imageDimension-1,ind)).swapaxes(imageDimension-1,ind)]
+        return result
+
+
+    def __divergence(self,inImage):
+        imageDimension=len(inImage.shape)-1
+        summation=0
+        for ind in range(imageDimension-1,-1,-1):
+            summation+=self.__backDerivative(inImage[imageDimension-1-ind].swapaxes(imageDimension-1,ind)).swapaxes(imageDimension-1,ind)
+        return summation
+
+    @staticmethod  
+    def __getSquareSum(inImage):
+        imageDimension=len(inImage.shape)-1
+        summation=0
+        for ind in range(0,imageDimension):
+            summation+=inImage[ind]**2
+        return np.sqrt(summation)
+    
+    @staticmethod    
+    def __forwardDerivative(In):
+         d=0*In
+         d[:-1]=In[1:]-In[:-1]
+         return d
+    
+    @staticmethod  
+    def __backDerivative(In):
+        d=0*In
+        d[1:]=In[1:]-In[:-1]
+        return d  
 
 file="/hdd/Mega/Dropbox_old_2/Dataset/Pre.mhd"
-
-Sn=readVolume(file)
-print(Sn.shape)
-#Sn=Sn[5]
-#Im=scipy.ndimage.imread(File, flatten=False, mode=None)
-#Im=np.array(Im[:,:,0],dtype="float")
-
-sizeArray=np.array(Sn.shape)
-#addition of padding to image edges
-sizeArray+=2
-imArr=np.zeros(sizeArray)
-imArr[1:-1,1:-1,1:-1]=Sn
-Sn=imArr
-print(Sn.shape)
-
-def der(In):
-    D=0*In
-    D[:-1]=In[1:]-In[:-1]
-    return D
-
-def div1(In):
-    div=0*In
-    div[1:]=In[1:]-In[:-1]
-    return div
-
-def gradient(inImage):
-    imageDimension=len(inImage.shape)
-    print(inImage.shape)
-    print(imageDimension)
-    result=[]
-    for ind in range(imageDimension-1,-1,-1):
-        print(ind)
-        result+=[der(inImage.swapaxes(imageDimension-1,ind)).swapaxes(imageDimension-1,ind)]
-    return result
-
-def divergence(inImage):
-    imageDimension=len(inImage.shape)-1
-    print((imageDimension))
-    
-    summation=0
-    for ind in range(imageDimension-1,-1,-1):
-        summation+=div1(inImage[imageDimension-1-ind].swapaxes(imageDimension-1,ind)).swapaxes(imageDimension-1,ind)
-        
-    return summation
-
-    
-
-def derX(In):
-    D=0*In
-    D[:-1,:,:]=In[1:,:,:]-In[:-1,:,:]
-    return D
-
-def derY(In):
-    D=0*In
-    D[:,:-1,:]=In[:,1:,:]-In[:,:-1,:]
-    return D
-
-def derZ(In):
-    D=0*In
-    D[:,:,:-1]=In[:,:,1:]-In[:,:,:-1]
-    return D
-
-def grad(In):
-    return derX(In),derY(In),derZ(In)
-
-def divZ(In):
-    DivX=1*In
-    DivX[:,:,1:]=In[:,:,1:]-In[:,:,:-1]
-    return DivX
-
-def divY(In):
-    Div=0*In
-    Div[:,1:,:]=In[:,1:,:]-In[:,:-1,:]
-    return Div
-
-def divX(In):
-    Div=0*In
-    Div[1:,:,:]=In[1:,:,:]-In[:-1,:,:]
-    return Div
-
-def div(In):
-    return divX(In[0])+divY(In[1])+divZ(In[2])
-
-
-Pold=np.array([np.copy(Sn),np.copy(Sn),np.copy(Sn)])
-P=0*Pold
-To=0.1
-Lm=50.0001
-for ii in range(0,20):
-    Psi=np.array(gradient(divergence(P)-Sn/Lm))
-    r=np.sqrt(Psi[0]**2+Psi[1]**2+Psi[2]**2)
-    P=(P+To*Psi)/(1+To*r)
-    
-Sest=(Sn-divergence(P)*Lm)
-plt.imshow(Sest[5],cmap="Greys_r")
-#plt.imshow(np.abs(Sn-Sest),cmap="Greys_r")
+image=readVolume(file)
+print(image.shape)
+tv=TVmin()
+tv.setInputImage(image)
+tv.setLambda(50)
+tv.setTo(0.15)
+tv.setVerbose(True)
+tv.minimize()
+plt.imshow(tv.getResultImage()[5],cmap="Greys_r")
 plt.show()
+
     
-
-
-
