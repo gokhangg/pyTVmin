@@ -1,0 +1,28 @@
+License granted by Julien Jomier (jomier@unc.edu) on 2007-08-28T14:24:33Z (GMT):
+
+NON-EXCLUSIVE DISTRIBUTION, USE, AND MODIFICATION LICENSE
+
+By signing and submitting this license, you (the author(s) or copyright
+owner) grants to Kitware, Inc. (Kitware) the non-exclusive right to reproduce,
+modify, use for any purpose, and/or distribute your submission worldwide in print and electronic format and in any medium,
+including but not limited to audio or video.
+
+You also agree that Kitware may keep more than one copy of this submission for
+purposes of security, back-up and preservation.
+
+You represent that the submission is your original work, and that you have
+the right to grant the rights contained in this license. You also represent
+that your submission does not, to the best of your knowledge, infringe upon
+anyone's copyright or patent.
+
+If the submission contains material for which you do not hold copyright,
+you represent that you have obtained the unrestricted permission of the
+copyright owner to grant Kitware the rights required by this license, and that
+such third-party owned material is clearly identified and acknowledged
+within the text or content of the submission.
+
+IF THE SUBMISSION IS BASED UPON WORK THAT HAS BEEN SPONSORED OR SUPPORTED
+BY AN AGENCY OR ORGANIZATION OTHER THAN KITWARE, YOU REPRESENT THAT YOU HAVE
+FULFILLED ANY RIGHT OF REVIEW OR OTHER OBLIGATIONS REQUIRED BY SUCH
+CONTRACT OR AGREEMENT.
+
