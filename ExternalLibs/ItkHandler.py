@@ -2,7 +2,7 @@ import numpy as np
 import SimpleITK as sitk
 
 
-class itk_handler(object):
+class ItkHandler(object):
 
     def loadImage(self, imFile):
         try:

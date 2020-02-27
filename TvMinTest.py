@@ -5,14 +5,12 @@ Created on Thu Jun 21 19:42:09 2018
 @author: Gokhan Gunay
 """
 
-import itk_handler as itk_stuff
+
 import sys
 import argparse
- 
-sys.path.insert(0, "./TvMin")
 
-import TvMin
-
+from TvMin import TvMin
+from ExternalLibs import ItkHandler
 
 def main(argv):
     print("---------------------------------------------------")
@@ -53,14 +51,14 @@ def main(argv):
     
     args = parser.parse_args()
     
-    image_loader = itk_stuff.itk_handler.loadItkImage
-    image_saver = itk_stuff.itk_handler.saveItkImage
+    image_loader = ItkHandler.ItkHandler.loadItkImage
+    image_saver = ItkHandler.ItkHandler.saveItkImage
     
     if not args.InFile is None:
         image = image_loader(args.InFile)
         print("Input file is :" + args.InFile)
         
-        tv=TvMin.TvMin()
+        tv= TvMin.TvMin()
         tv.setInputImage(image[0])
         
         if not args.Lambda is None:
