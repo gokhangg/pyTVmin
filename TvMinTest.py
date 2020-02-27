@@ -5,55 +5,105 @@ Created on Thu Jun 21 19:42:09 2018
 @author: Gokhan Gunay
 """
 
-
-
-import SimpleITK as sitk
-import numpy as np
+import itk_handler as itk_stuff
 import sys
+import argparse
  
 sys.path.insert(0, "./TvMin")
 
 import TvMin
-#@brief Reads an image using SimpleITK
-#@param File image file to be read
-#@return vol numpy array containing voxel values, origin locaitonof origin in space, spacing voxel spacing
-def load_itk(File):
-    itkimage = sitk.ReadImage(File)
-    vol = sitk.GetArrayFromImage(itkimage)
-    origin = np.array(list(reversed(itkimage.GetOrigin())))
-    spacing = np.array(list(reversed(itkimage.GetSpacing())))
-    return vol, origin, spacing
-
-#@brief Reads an image file and returnes a slice 
-#@param File Image file
-#@param Slice Number of slice
-#@return SLice of input image
-def readVolumeSlice(File,Slice):
-    itkimage = sitk.ReadImage(File)
-    return sitk.GetArrayFromImage(itkimage)[Slice]
-
-#@brief Reads an image file and returnes voxel intensities 
-#@param File Image file to be read
-#@return Image volume 
-def readVolume(File):
-    itkimage = sitk.ReadImage(File)
-    return sitk.GetArrayFromImage(itkimage)
 
 
-import matplotlib.pyplot as plt
-
-
-file="./TestData/Patient04.mha"
-image=readVolume(file)
-print(image.shape)
-tv=TvMin.TvMin()
-tv.setInputImage(image)
-tv.setLambda(50)
-tv.setTo(0.15)
-tv.setIterationNum(30)
-tv.setVerbose(True)
-tv.minimize()
-plt.imshow(tv.getResultImage()[5], cmap="Greys_r")
-plt.show()
-
+def main(argv):
+    print("---------------------------------------------------")
+    parser = argparse.ArgumentParser(
+        description="Applies total variation minimization on the input image " +
+                    "given the minimization parameters, and then " +
+                    " writes the result to the given location with desired image format.\n")
     
+    parser.add_argument(
+        "--InFile", "-in",
+        type=str,
+        help="Input image file.")
+    
+    parser.add_argument(
+        "--OutFile", "-out",
+        type=str,
+        help="Output image file.")
+    
+    parser.add_argument(
+        "--Lambda", "-l",
+        type=float,
+        help="Lambda weight of the minimization algorithm.")
+    
+    parser.add_argument(
+        "--To", "-to",
+        type=float,
+        help="To value of the minimization algorithm.")
+    
+    parser.add_argument(
+        "--Iteration", "-it",
+        type=int,
+        help="Number of iterations in the minimization algorithm.")
+    
+    parser.add_argument(
+        "--Verbose", "-v",
+        type=bool,
+        help="Used to print details of the procedure steps.")
+    
+    args = parser.parse_args()
+    
+    image_loader = itk_stuff.itk_handler.loadItkImage
+    image_saver = itk_stuff.itk_handler.saveItkImage
+    
+    if not args.InFile is None:
+        image = image_loader(args.InFile)
+        print("Input file is :" + args.InFile)
+        
+        tv=TvMin.TvMin()
+        tv.setInputImage(image[0])
+        
+        if not args.Lambda is None:
+            tv.setLambda(args.Lambda)
+            print("Lambda value is " + str(args.Lambda) + ".")
+        else:
+            print("Lambda value is not provided. Assigned 0 instead.")
+            tv.setLambda(0.)
+            
+        if not args.To is None:
+            tv.setTo(args.To)
+            print("To value is " + str(args.To) + ".")
+        else:
+            print("To value is not provided. Assigned 0.15 instead.")
+            tv.setTo(0.15)
+            
+        if not args.Iteration is None:
+            print("Iteration number is " + str(args.Iteration) + ".")
+            tv.setIterationNum(args.Iteration)
+        else:
+            print("Iteration number is not provided. Assigned 20 instead.")
+            tv.setIterationNum(20)
+        
+        if not args.Verbose is None:
+            print("Verbose is " + str(args.Verbose) + ".")
+            tv.setVerbose(args.Verbose)
+        else:
+            print("Verbose is not provided. Assigned False instead.")
+            tv.setVerbose(False)
+            
+        tv.minimize()
+    
+        print("Image shape: " + str(list(reversed((tv.getResultImage().shape)))) + ".\n")
+        image_saver(args.OutFile, [tv.getResultImage(), image[1], image[2]])
+        print("Output file is :" + args.OutFile)
+            
+        print("---------------------------------------------------")
+        print("done")
+        print("---------------------------------------------------")
+    else:
+        print("No input file provided. Please read help by typing --help.")
+
+
+if __name__ == "__main__":
+    main(sys.argv)
+ 

@@ -36,7 +36,7 @@ class TvMin(object):
             p=np.array(self.__gradient(0*self.__inputImage))
         except:
             if self.__verbose:
-                print("Problem with input image")
+                print("Problem with input image.")
             return
         try:
             for ind in range(0, self.__iterationNumber):
